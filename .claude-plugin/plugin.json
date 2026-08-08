@@ -1,7 +1,8 @@
 {
-  "name": "dynamic-loop",
-  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-loop skill 按计划执行",
+  "name": "looppower",
+  "version": "1.0.0",
+  "description": "Expert Panel planning + plan-execution workflow: the schizophrenic agent drafts a High-Level Execution Plan, which the dynamic-loop skill then executes",
   "author": {
-    "name": "yao"
+    "name": "zhaoyshine"
   }
 }

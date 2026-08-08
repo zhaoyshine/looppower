@@ -1,14 +1,13 @@
 {
-  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "dynamic-loop",
-  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-loop skill 按计划执行",
+  "name": "looppower",
+  "description": "Expert Panel planning + plan-execution workflow: the schizophrenic agent drafts a High-Level Execution Plan, which the dynamic-loop skill then executes",
   "owner": {
-    "name": "yao"
+    "name": "zhaoyshine"
   },
   "plugins": [
     {
-      "name": "dynamic-loop",
-      "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-loop skill 按计划执行",
+      "name": "looppower",
+      "description": "Expert Panel planning + plan-execution workflow: the schizophrenic agent drafts a High-Level Execution Plan, which the dynamic-loop skill then executes",
       "source": "./",
       "category": "productivity"
     }

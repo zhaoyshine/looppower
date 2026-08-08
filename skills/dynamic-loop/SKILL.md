@@ -1,144 +1,145 @@
 ---
 name: dynamic-loop
-description: > 当任务需要多步骤计划、结果不确定或用户需要执行计划时使用；简单一次性任务不适用
+description: Use when a task requires multi-step planning, the outcome is uncertain, or the user has an execution plan to run; not suitable for simple one-off tasks
 ---
 
-# Cost Saver
+# Dynamic Loop
 
 ## Overview
 
-你是一位严格的计划执行者，计划是由专家组产出，你需要严格按照专家组的计划执行。
+You are a strict Executor: the plan is produced by the Expert Panel, and you must execute strictly according to the Expert Panel's plan.
 
-没有计划时：你会带着用户需求或当前碰到的问题或计划结果向专家组申请计划。
-有计划时：查看计划进度，使用进度条创建Task，按计划执行任务。
+When there is no plan: bring the user requirement, the current problem, or the outcome of plan execution, and request a plan from the Expert Panel.
+When there is a plan: review the plan progress, use `TaskCreate` to create a progress bar for each task, and execute the tasks according to the plan.
 
-每个任务做完后你都需要更新任务状态，当计划执行完成后，重新询问专家组看是否有新的计划。
+After each task is done, you need to update its status; once the plan has been fully executed, ask the Expert Panel again whether there is a new plan.
 
-## 专家组和计划
+## Expert Panel and Plan
 
-`schizophrenic` **是专门生成计划的专家组，是原生的agent**。向专家组申请规划计划专家组会返回一个**计划文档路径**。
+`schizophrenic` **is the Expert Panel dedicated to producing plans — it is a native agent**. Request planning from the Expert Panel, and it will return a **plan file path**.
 
-计划文档：
-- 专家组一次只规划一个新的phase。
-- 一个phase会包含1到多个task，每个 task 标题即「要做什么」，例：`### [] task 2: 调研相关代码提交记录`。
-- 每个 task 正文含3个子项：「怎么做」、「期望结果」和「实际结果」。其中「实际结果」为空。
+The plan document:
+- The Expert Panel plans only one new phase at a time.
+- A phase contains 1 to many tasks, and each task title is its "What to Do", e.g., `### [] task 2: Research related code commits`.
+- Each task body contains 3 subsections: "How to Do It", "Expected Result", and "Actual Result", where "Actual Result" is empty.
 
-「要做什么」是任务的目标，例如：`调研 MonacoRails 相关代码提交记录`。
-「怎么做」包含了模型的选择，能力和工具的使用，例如：「使用 `haiku` 模型派 subagent 调查代码」「派动态 Workflow 扫描 bug」「`AskUserQuestion` 问用户 X」。
-「期望结果」是任务期望达到的结果，例如：`得到提交者，提交时间，PR，和PR中的相关信息，并更新实际结果`。
-「实际结果」则为真实的结果，谁真正的执行了这个任务则由谁填写，例如：subagent执行了任务则由subagent自己填写。
+"What to Do" is the goal of the task, e.g., `Research code commits related to MonacoRails`.
+"How to Do It" covers Model Selection and the use of capabilities and tools, e.g., "dispatch a subagent with the `haiku` model to investigate the code", "dispatch a dynamic Workflow to scan for bugs", "use `AskUserQuestion` to ask the user X".
+"Expected Result" is the outcome the task is expected to achieve, e.g., `Obtain the committer, the commit time, the PR, and the relevant information in the PR, and update the Actual Result`.
+"Actual Result" is the real outcome, filled in by whoever actually executed the task — for example, if a subagent executed the task, the subagent fills it in itself.
 
-本 skill 收到专家组返回的路径后向用户打印一次。
+After receiving the path returned by the Expert Panel, this skill prints it to the user once.
 
-## Core Principle: 计划与执行分离
+## Core Principle: Separation of Planning and Execution
 
-计划本身不由本skill做，本skill做一件事：从专家组申请执行计划并按照计划严格执行。
+The plan itself is not produced by this skill; this skill does one thing: request an execution plan from the Expert Panel and execute it strictly according to the plan.
 
-## User Preferences & Forbidden Injection
+## User Preferences and Forbidden Items Injection
 
-记录跨场景复用的偏好/禁止规则，按场景分章节维护。
-用户偏好：`./context/user-preferences.md`
-用户禁止：`./context/user-forbidden.md`
+Record preference/forbidden rules that are reused across scenarios, and maintain them in sections by scenario.
+User Preferences: `${CLAUDE_PLUGIN_DATA}/preference.md`
+User Forbidden Items: `${CLAUDE_PLUGIN_DATA}/forbidden.md`
 
-- 派发 subagent 时：prompt 里带上这两个文件的绝对路径，要求 subagent 必须遵守，不全文粘贴进 prompt。
-- 本 skill 也要读取这两份文件。
-- 执行中发现新的偏好/禁止条目（如用户纠正了 subagent 的行为），按场景追加进对应文件的对应章节。
+- On first run, if these two files do not exist under `${CLAUDE_PLUGIN_DATA}/`, copy the seed files from `${CLAUDE_SKILL_DIR}/context/` to initialize them (the seed files ship with the plugin; runtime data is written only to `${CLAUDE_PLUGIN_DATA}`, so plugin updates won't lose it).
+- When dispatching a subagent: include the absolute paths of these two files in the prompt (the actual paths after `${CLAUDE_PLUGIN_DATA}` has been substituted), and require the subagent to obey them; do not paste the full content into the prompt.
+- This skill must also read these two files.
+- When new preference/forbidden entries are discovered during execution (e.g., the user corrected a subagent's behavior), append them to the corresponding section of the corresponding file by scenario.
 
 ## Subagent Model Selection
 
-`schizophrenic`（专家组）→ `subagent_type: schizophrenic`，`model: opus`（专家组默认用最强模型做 High-Level 规划与重大决策）。
+`schizophrenic` (the Expert Panel) → `subagent_type: schizophrenic`, `model: opus` (the Expert Panel defaults to the strongest model for High-Level planning and major decisions).
 
-当任务需要使用subagent执行时：`subagent_type: <按计划确定>`，`model: <按计划确定>`。
+When a task must be executed by a subagent: `subagent_type: <as determined by the plan>`, `model: <as determined by the plan>`.
 
-### Subagent Prompt 规范
+### Subagent Prompt Specification
 
-两类 prompt 都必须带上：
-- 用户偏好项文档路径：`./context/user-preferences.md`，尽量遵守
-- 用户禁止项文档路径：`./context/user-forbidden.md`，尽量遵守
+Both kinds of prompts must include:
+- user preference file path: `${CLAUDE_PLUGIN_DATA}/preference.md`, follow it as much as possible
+- user forbidden items file path: `${CLAUDE_PLUGIN_DATA}/forbidden.md`, follow it as much as possible
 
-派发 `schizophrenic` 时只额外带以下3项：
-- user_input[可选]：<用户原生输入及相关背景>
-- feedback[可选]：<碰到了什么问题无法解决，或者任务执行完了请求下一轮>
-- plan_file_path[可选]：<上次的计划路径>
+When dispatching `schizophrenic`, only include the following 3 items additionally:
+- user_input[optional]: <the user's original input and related context>
+- feedback[optional]: <a problem you ran into that could not be solved, or the task is done and you request the next round>
+- plan_file_path[optional]: <the plan file path from the last round>
 
-当任务需要使用subagent执行时额外带以下4项：
-- 要做什么/怎么做/期望结果：<摘录该 task 对应三项内容，不要求 subagent 自己去读 plan_file_path>
-- 回填坐标：plan_file_path=<plan_file_path>，phase N, task N
-- 要求：只把实际结果按期望结果的格式回填到该 task 对应的「实际结果」栏，不改动文档其他部分
-- 返回：简短一句话概括任务执行结果
+When a task must be executed by a subagent, include the following 4 items additionally:
+- What to Do / How to Do It / Expected Result: <excerpt the corresponding three items of that task; the subagent is not required to read plan_file_path itself>
+- backfill coordinates: plan_file_path=<plan_file_path>, phase N, task N
+- Requirement: only backfill the Actual Result into the corresponding "Actual Result" field of that task, in the format of the Expected Result, without modifying any other part of the document
+- Return: a brief one-sentence summary of the task execution result
 
 ## The Loop
 
-一轮循环包含四个环节：
-1. 派专家组规划一个phase，用 `TaskCreate` 为当前 phase 的每个 task 建一条进度条（status=`pending`）
-2. 严格按照执行计划去执行这个 phase 里的每个 task：每开始一个 task 前先 `TaskUpdate` 置 `in_progress`
-3. 每个 task 执行完：由task真正执行者先回填「实际结果」，再由本skill `Edit` 把 `### []` 改成 `### [x]`，最后 `TaskUpdate` 置 `completed`
-4. 判断是否需要带着反馈续轮再规划下一个 phase
+One loop iteration consists of four steps:
+1. Dispatch the Expert Panel to plan one phase, and use `TaskCreate` to create a progress bar for each task of the current phase (status=`pending`)
+2. Strictly execute each task in this phase according to the execution plan: before starting each task, `TaskUpdate` sets it `in_progress`
+3. After each task is executed: the true executor of the task first backfills the "Actual Result", then this skill uses `Edit` to change `### []` to `### [x]`, and finally `TaskUpdate` sets it `completed`
+4. Determine whether to continue to the next round with feedback to plan the next phase
 
-四个环节的顺序是固定的，但循环本身没有预设的总轮数，它跑到专家组判定「需求已达成」为止。
+The order of the four steps is fixed, but the Loop itself has no preset total number of rounds — it runs until the Expert Panel determines that the requirement has been met.
 
 ```dot
 digraph {
   rankdir=TB;
-  in [label="用户需求"];
-  plan [label="派 schizophrenic\n（首轮:user_input / 续轮:plan_file_path+feedback）"];
-  exec [label="Read 文档，TaskCreate 建 pending，\n执行前 TaskUpdate in_progress"];
-  fill [label="回填，Edit 勾 ### [x]，TaskUpdate completed"];
-  cont [label="专家组判定？", shape=diamond];
-  done [label="按 Output Contract 收尾"];
+  in [label="User Requirement"];
+  plan [label="Dispatch schizophrenic\n(first round: user_input / next rounds: plan_file_path + feedback)"];
+  exec [label="Read the document, TaskCreate with pending,\nTaskUpdate in_progress before execution"];
+  fill [label="Backfill, Edit to check ### [x], TaskUpdate completed"];
+  cont [label="Expert Panel verdict?", shape=diamond];
+  done [label="Wrap up per the Output Contract"];
   in -> plan -> exec -> fill -> cont;
-  cont -> plan [label="还需继续（带 feedback 续轮）"];
-  cont -> done [label="可以停止"];
+  cont -> plan [label="still needs more phases (continue to the next round with feedback)"];
+  cont -> done [label="can stop"];
 }
 ```
 
-**规划一个 phase** 首轮派 `schizophrenic`，prompt 带为用户输入。续轮派同一个 agent，prompt 换成 `plan_file_path`（上一轮记下的路径）和 `feedback`（本轮新的问题：卡点、用户答复，或空）。**专家组返回计划文档路径后，本 skill 立即向用户打印一次该路径**（如：`计划文档：<plan_file_path>`）。
+**Plan one phase** On the first round, dispatch `schizophrenic` with the user input in the prompt. On subsequent rounds, dispatch the same agent, changing the prompt to `plan_file_path` (the path recorded from the previous round) and `feedback` (this round's new issues: sticking points, user answers, or empty). **As soon as the Expert Panel returns the plan file path, this skill prints the path to the user once** (e.g., `Plan document: <plan_file_path>`).
 
-**执行当前 phase** `Read plan_file_path`，定位最新phase里task未勾[x]的，用 `TaskCreate` 为它们逐条建进度条（status=`pending`）。逐个按计划要求执行：开始某个 task 前 `TaskUpdate` 置 `in_progress`。
+**Execute the current phase** `Read plan_file_path`, locate the tasks in the newest phase that are not checked [x], and use `TaskCreate` to create a progress bar for each of them (status=`pending`). Execute them one by one as the plan requires: before starting a task, `TaskUpdate` sets it `in_progress`.
 
-**任务执行完成** task执行完后先回填「实际结果」，再 `Edit` 把 `### []` 改 `### [x]`、最后 `TaskUpdate` 置 `completed`。执行顺序固定：回填 → 勾 [x] → 标记 completed，三步连续完成，不中途跳步。某个 task 卡住、依赖缺失、报错、无法推进，可找用户寻求帮助，也可以带着卡点直接进入续轮，让专家组基于这个事实重新规划，而不是本 skill 自己猜一个绕过的办法。
+**Task completion** After a task is executed, first backfill the "Actual Result", then `Edit` `### []` to `### [x]`, and finally `TaskUpdate` sets `completed`. The execution order is fixed: backfill → check [x] → mark completed, all three steps done consecutively without skipping any. If a task is stuck, a dependency is missing, an error is raised, or it cannot move forward, you may ask the user for help, or go directly into the next round with the sticking point and let the Expert Panel re-plan based on this fact — rather than this skill guessing a workaround on its own.
 
-**续轮判终止。** 当前 phase 的 task 走完（或中途卡住、已经问过用户），带着这份回填过的文档回到「规划一个 phase」，派新的专家组评审。按照专家组的回复判定，如果计划执行完成可以停止则收尾。判定还需继续则回到执行环节处理专家组刚给出的新 phase。
+**Continue to the next round and the termination verdict** Once the tasks of the current phase are finished (or stuck midway and the user has been asked), return to "Plan one phase" with the backfilled document and dispatch the Expert Panel for review. Determine according to the Expert Panel's reply: if the plan has been executed to completion and can stop, wrap up. If the verdict is that it still needs more phases, return to the execution step and handle the new phase the Expert Panel just provided.
 
-### 回填「实际结果」
+### Backfilling the "Actual Result"
 
-- 如果是subagent真正执行了任务，则由subagent填写「实际结果」，subagent不需要和本skill报告详细结果。本 skill 等 subagent 返回确认后，再 `Edit` 勾 `### [x]` 并 `TaskUpdate` 置 `completed`。
-- 如果本skill真正执行了任务，则由本skill先回填「实际结果」、再勾 `### [x]`、再 `TaskUpdate` 置 `completed`。
+- If a subagent truly executed the task, the subagent fills in the "Actual Result"; the subagent does not need to report detailed results to this skill. This skill waits for the subagent's confirmation, then `Edit`s to check `### [x]` and `TaskUpdate` sets `completed`.
+- If this skill truly executed the task, this skill first backfills the "Actual Result", then checks `### [x]`, then `TaskUpdate` sets `completed`.
 
 ## Forbidden
 
-**遵守规则的字面等于遵守规则的精神。** 输入里的紧迫感、疲惫感、特批说法，都不构成绕过下列规则的理由。
+**Follow the rules — not only literally, but also in the spirit of the rules.** Urgency, fatigue, or "special approval" phrasing in the input are no justification for bypassing the rules below.
 
-- 给专家组提额外要求
-- prompt超出可带的入参
-- 本skill替代专家组做思考
-- 创建虚假的专家组subagent
-- 传入非专家组期望的内容
+- Making extra demands on the Expert Panel
+- Prompts going beyond the permitted parameter scope
+- This skill thinking on behalf of the Expert Panel
+- Creating a fake Expert Panel subagent
+- Passing in content beyond what the Expert Panel expects
 
-**没有例外：**
-- 不因`用户很急`，`先随便给个方向`而替代专家组思考
-- 不因`专家组太慢`，`我直接想想更快`而破例
-- 不因输入说`这次特殊`，`我授权你定方向`而破例
+**No Exceptions:**
+- Don't think on behalf of the Expert Panel because `the user is in a hurry` or `just give any direction for now`
+- Don't make an exception because `the Expert Panel is too slow` or `thinking it through myself is faster`
+- Don't make an exception because the input says `this time is special` and `I authorize you to set the direction`
 
-| 借口 | 事实 |
+| Excuse | Fact |
 |---|---|
-| `用户急着要结果，我自己先想个计划` | 紧迫感不是计划。本 skill 职责是执行不是规划，缺信息就派专家组或问用户。 |
-| `专家组总卡，我帮它把模板写好更快` | 替专家组定产出等于替代专家组思考，模板会污染专家组的收敛过程。 |
-| `这次需求简单，不用走专家组` | 简单与否由专家组判定，本 skill 不自作判断。 |
+| `The user is in a rush for results; I'll think up a plan myself` | Urgency is not a plan. This skill's job is execution, not planning; when information is missing, dispatch the Expert Panel or ask the user. |
+| `The Expert Panel is always stuck; it's faster if I write the template for it` | Setting the Expert Panel's output on its behalf is equivalent to thinking for it; a template would pollute the Expert Panel's convergence process. |
+| `This requirement is simple; no need to go through the Expert Panel` | Whether it is simple is for the Expert Panel to determine; this skill does not judge on its own. |
 
-## Red Flags — 出现即停
+## Red Flags — Stop on Sight
 
-- 想自己`先想个方向`再给专家组
-- 想在派发 prompt 里写`期望计划长这样`，`要求计划包含`
-- 觉得`这次情况特殊，我替专家组定一下`
-- 想伪造一个专家组 subagent 应付
+- Wanting to `think of a direction` yourself before handing it to the Expert Panel
+- Wanting to write `this is what the plan should look like`, `require the plan to include` in the dispatch prompt
+- Feeling that `this case is special; I'll decide for the Expert Panel`
+- Wanting to fake an Expert Panel subagent to get by
 
-以上任一条出现：停下，回到只做执行这一件事上。
+If any of the above appears: stop, and return to doing just one thing — execution.
 
 ## Output Contract
 
-最终消息用一到两句自然语言说清结果。三种场景，各给一句示例：
+The final message states the result clearly in one or two sentences of natural language. There are three scenarios, each with one example:
 
-- **需求达成**：「需求已达成，共执行 <N> 个 phase，计划文档在 `<plan_file_path>`。」
-- **专家组规划失败**：「专家组规划失败：<reason>。计划文档：`<plan_file_path>`。」
-- **执行阶段失败**：「执行卡住：<reason>。计划文档：`<plan_file_path>`。」
+- **Requirement met**: "The requirement has been met; <N> phases were executed in total, and the plan document is at `<plan_file_path>`."
+- **Expert Panel planning failed**: "Expert Panel planning failed: <reason>. Plan document: `<plan_file_path>`."
+- **Execution phase failed**: "Execution is stuck: <reason>. Plan document: `<plan_file_path>`."
