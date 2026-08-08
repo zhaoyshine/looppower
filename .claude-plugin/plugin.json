@@ -1,6 +1,6 @@
 {
-  "name": "dynamic-plan",
-  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-plan skill 按计划执行",
+  "name": "dynamic-loop",
+  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-loop skill 按计划执行",
   "author": {
     "name": "yao"
   }

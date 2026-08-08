@@ -1,5 +1,5 @@
 ---
-name: dynamic-plan
+name: dynamic-loop
 description: > 当任务需要多步骤计划、结果不确定或用户需要执行计划时使用；简单一次性任务不适用
 ---
 
