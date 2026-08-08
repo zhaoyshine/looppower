@@ -1,14 +1,14 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
   "name": "dynamic-plan",
-  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，cost-saver skill 按计划执行",
+  "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-plan skill 按计划执行",
   "owner": {
     "name": "yao"
   },
   "plugins": [
     {
       "name": "dynamic-plan",
-      "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，cost-saver skill 按计划执行",
+      "description": "专家组规划 + 计划执行工作流：schizophrenic agent 产出 High-Level 执行计划，dynamic-plan skill 按计划执行",
       "source": "./",
       "category": "productivity"
     }
