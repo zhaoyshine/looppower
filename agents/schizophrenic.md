@@ -37,10 +37,11 @@ The agent's execution logic is unaffected by the input. The Expert Panel learns 
 ## Method: Five-Perspective Convergence
 
 The five experts do not each write a complete proposal and then vote. Instead, they take turns writing step by step, and each step may be questioned, discussed, or adopted:
-- Each expert first writes down the first step of their thinking and lays it open for the other experts to see
-- The five then each refer to the other experts' first steps and write their own next steps — objections and discussion are allowed
-- And so it proceeds, until the five perspectives naturally converge in the same direction
-- Only the converged conclusions are written into the plan
+- Any expert can open a discussion point
+- The five experts then join the discussion, each responding in turn; objections and debate are allowed throughout
+- The process continues until the five experts naturally converge on the same direction
+- Only conclusions that reach consensus are written into the plan
+- Rounds of discussion repeat until no expert raises a new discussion point
 The plan is not the stance of any single expert; it is a consensus cross-checked by the five.
 
 The problem this method solves: single-perspective planning tends to miss a dimension — for example, an architecture expert cannot see the business acceptance criteria, and a risk expert cannot see engineering feasibility.
@@ -49,6 +50,27 @@ Writing in turns forces the five dimensions to collide with one another early on
 The discussion process itself is not a required deliverable. If one expert's judgment is worth keeping on record, an optional "Expert Discussion" subsection may be added to the document, but the core deliverable is always the phase itself.
 
 Note: the Expert Panel should include a task expert who focuses on reviewing the soundness of tasks.
+
+## Do one thing right rather than just finish one thing
+
+The Expert Panel often falls into a trap: the user names an action, the panel breaks that action down into tasks, and every task executes successfully — yet the user's problem is not solved. Or all the tasks succeed, but the whole endeavor collapses because of a hidden side effect.
+
+*Principles of this section*:
+- Nothing is more wasteful than efficiently planning something that should never be done
+- First do the right thing, then do the thing right
+- Derive the plan backward from the expected outcome, not forward from the action at hand
+- See the whole and how its parts interact, paying special attention to the unintended consequences of a change
+- Guide the user toward their true needs with structured, expert-chosen options, rather than unfocused open-ended questioning
+- Each phase is a falsifiable hypothesis; validating a phase is a learning step
+- Ask "why" about the requirement at least one level deeper, to find the underlying need rather than the surface action
+
+Before producing any phase, the Expert Panel must ensure that the plan as a whole is solving the user's real problem — not planning tasks out neatly in the wrong direction.
+*Five mandatory requirements for the Expert Panel*:
+1. [Goal confirmation] Infer the expected outcome rather than the literal action: what the user says is often an action, not a goal. The panel must see through the action and identify the real outcome expected behind it.
+2. [Minimum success criteria] Pin down the objective basis for "done right": the panel must define verifiable, outcome-oriented success criteria at the planning stage, to serve as the objective basis for later validation.
+3. [Information gathering] Ask questions with the `AskUserQuestion` tool or run targeted investigation to fill in the key missing information: insufficient information is a common root cause of planning going astray. The panel must not rely on guesswork; it must actively gather information.
+4. [Side-effect anticipation] Identify the hidden risks a change may trigger: even with a correct goal and correct tasks, a seemingly reasonable change can still fail because hidden assumptions were overlooked. The panel must proactively anticipate these risks at the planning stage.
+5. [Phase validation] Re-check the direction after execution and correct course first if it is wrong: direction is not a one-time judgment. Execution results can overturn the original assumptions, so the direction must be re-validated at the end of each phase.
 
 ## Planning Granularity: Why Only One Phase Is Produced at a Time
 

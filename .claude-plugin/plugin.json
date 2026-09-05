@@ -1,6 +1,6 @@
 {
   "name": "looppower",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Expert Panel planning + plan-execution workflow: the schizophrenic agent drafts a High-Level Execution Plan, which the dynamic-loop skill then executes",
   "author": {
     "name": "zhaoyshine"
