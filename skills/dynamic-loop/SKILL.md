@@ -54,16 +54,15 @@ When a task must be executed by a subagent: `subagent_type: <as determined by th
 ### Subagent Prompt Specification
 
 Both kinds of prompts must include:
-- user preference file path: `${CLAUDE_PLUGIN_DATA}/preference.md`, follow it as much as possible
-- user forbidden items file path: `${CLAUDE_PLUGIN_DATA}/forbidden.md`, follow it as much as possible
+- `preference_path`: `${CLAUDE_PLUGIN_DATA}/preference.md`, follow it as much as possible
+- `forbidden_path`: `${CLAUDE_PLUGIN_DATA}/forbidden.md`, follow it as much as possible
 
-When dispatching `schizophrenic`, only include the following 3 items additionally:
-- user_input[optional]: <the user's original input and related context>
-- feedback[optional]: <a problem you ran into that could not be solved, or the task is done and you request the next round>
-- plan_file_path[optional]: <the plan file path from the last round>
+When dispatching `schizophrenic`, only include the following 2 items additionally:
+- requirement: the user's original requirement or the AI's feedback e.g., new issues, sticking points, user replies, or a request to plan the next phase after a task has finished executing
+- plan_file_path[optional]: the plan file path from the last round
 
 When a task must be executed by a subagent, include the following 4 items additionally:
-- What to Do / How to Do It / Expected Result: <excerpt the corresponding three items of that task; the subagent is not required to read plan_file_path itself>
+- What to Do / How to Do It / Expected Result: excerpt the corresponding three items of that task; the subagent is not required to read plan_file_path itself
 - backfill coordinates: plan_file_path=<plan_file_path>, phase N, task N
 - Requirement: only backfill the Actual Result into the corresponding "Actual Result" field of that task, in the format of the Expected Result, without modifying any other part of the document
 - Return: a brief one-sentence summary of the task execution result
@@ -74,7 +73,7 @@ One loop iteration consists of four steps:
 1. Dispatch the Expert Panel to plan one phase, and use `TaskCreate` to create a progress bar for each task of the current phase (status=`pending`)
 2. Strictly execute each task in this phase according to the execution plan: before starting each task, `TaskUpdate` sets it `in_progress`
 3. After each task is executed: the true executor of the task first backfills the "Actual Result", then this skill uses `Edit` to change `### []` to `### [x]`, and finally `TaskUpdate` sets it `completed`
-4. Determine whether to continue to the next round with feedback to plan the next phase
+4. Decide whether to continue to the next round, bringing this round's outcome (task results, sticking points, user answers) as the new `requirement` to plan the next phase
 
 The order of the four steps is fixed, but the Loop itself has no preset total number of rounds — it runs until the Expert Panel determines that the requirement has been met.
 
@@ -82,18 +81,18 @@ The order of the four steps is fixed, but the Loop itself has no preset total nu
 digraph {
   rankdir=TB;
   in [label="User Requirement"];
-  plan [label="Dispatch schizophrenic\n(first round: user_input / next rounds: plan_file_path + feedback)"];
+  plan [label="Dispatch schizophrenic\n(round 1: requirement / later rounds: requirement + plan_file_path)"];
   exec [label="Read the document, TaskCreate with pending,\nTaskUpdate in_progress before execution"];
   fill [label="Backfill, Edit to check ### [x], TaskUpdate completed"];
   cont [label="Expert Panel verdict?", shape=diamond];
   done [label="Wrap up per the Output Contract"];
   in -> plan -> exec -> fill -> cont;
-  cont -> plan [label="still needs more phases (continue to the next round with feedback)"];
+  cont -> plan [label="still needs more phases (next round carries a new requirement)"];
   cont -> done [label="can stop"];
 }
 ```
 
-**Plan one phase** On the first round, dispatch `schizophrenic` with the user input in the prompt. On subsequent rounds, dispatch the same agent, changing the prompt to `plan_file_path` (the path recorded from the previous round) and `feedback` (this round's new issues: sticking points, user answers, or empty). **As soon as the Expert Panel returns the plan file path, this skill prints the path to the user once** (e.g., `Plan document: <plan_file_path>`).
+**Plan one phase** Dispatch `schizophrenic` once per round with `requirement` in the prompt: the first round carries the user's original requirement and context; later rounds carry this round's new issues (sticking points, user answers), plus `plan_file_path` (the path recorded from the previous round). **As soon as the Expert Panel returns the plan file path, this skill prints the path to the user once** (e.g., `Plan document: <plan_file_path>`).
 
 **Execute the current phase** `Read plan_file_path`, locate the tasks in the newest phase that are not checked [x], and use `TaskCreate` to create a progress bar for each of them (status=`pending`). Execute them one by one as the plan requires: before starting a task, `TaskUpdate` sets it `in_progress`.
 

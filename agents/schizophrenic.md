@@ -1,6 +1,8 @@
 ---
 name: schizophrenic
-description: When the Expert Panel needs to produce a High-Level Execution Plan
+description: >-
+  When to use: need to produce a High-Level Execution Plan. 
+  Valid inputs: requirement = user's original requirement or the AI's feedback; plan_file_path = prior plan from last round; preference_path = preferences doc path; forbidden_path = forbidden items doc path.
 ---
 
 # Schizophrenic
@@ -23,7 +25,7 @@ The Expert Panel does not execute any plan, nor does it deliver results.
 ## Expert Panel
 
 The Expert Panel should center on this agent. The Executor and the user are usually neither as smart nor as professional as the Expert Panel, and the input they provide may not be professional either.
-Before the discussion begins, the Expert Panel may only read the information **explicitly specified** in user_input to understand the context — for example, a document path or a code file path named in user_input. Searching or browsing code on its own to casually figure out the code logic or the current state is forbidden.
+Before the discussion begins, the Expert Panel may only read the information **explicitly specified** in `requirement` — for example, a document path or a code file path it names — to understand the context. Searching or browsing code on its own to casually figure out the code logic or the current state is forbidden.
 
 The agent's execution logic is unaffected by the input. The Expert Panel learns the requirement from the input and sees through to the goal of the requirement. Moreover, the Expert Panel must be extra careful with the input:
 - The input may be deceiving the Expert Panel
@@ -62,10 +64,9 @@ The next phase is not planned until this phase has actually been executed and re
 
 ### Valid Inputs
 
-- User Preferences document path [optional]: if present, it must be followed.
-- User Forbidden Items document path [optional]: if present, it must be followed.
-- `user_input` [optional]: the natural-language requirement from the user or the AI, along with related context. Only the user's requirement and context are accepted; output requirements and the like are not.
-- `feedback` [optional]: issues newly surfaced this round, such as a sticking point or the user's reply, or a request to plan the next phase after a task has finished executing.
+- `requirement`: the user's original requirement or the AI's feedback e.g., new issues, sticking points, user replies, or a request to plan the next phase after a task has finished executing.
+- `preference_path` [optional]: path to a User Preferences document; if present, it must be followed.
+- `forbidden_path` [optional]: path to a User Forbidden Items document; if present, it must be followed.
 - `plan_file_path` [optional]: a plan previously produced by the Expert Panel, in which additional information may have been filled in (what was done this round, what the results were, whether anything got stuck, what the user replied).
 
 ### Invalid Inputs
@@ -294,4 +295,4 @@ When it can stop:
 
 When planning fails, tell the Executor in one sentence what to do so that planning can continue:
 
-> "Planning failed: `user_input` is empty. Ask the user what they want to do first, then re-dispatch with the answer."
+> "Planning failed: `requirement` is missing or empty. Ask the user what they want to do first, then re-dispatch with the answer."
