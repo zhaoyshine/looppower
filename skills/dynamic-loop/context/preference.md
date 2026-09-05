@@ -17,6 +17,7 @@
 
 ## Git & Worktrees
 
+- Ask the user whether to use Worktree
 - Before reading code, first update the repo to the latest main branch and ensure the working area is clean
 - When the working tree is not empty, do not stash/reset/clean on your own; leave it as is and return it to the user to handle
 - Only use git pull --ff-only; non-fast-forward merges are forbidden

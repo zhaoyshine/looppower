@@ -54,8 +54,8 @@ When a task must be executed by a subagent: `subagent_type: <as determined by th
 ### Subagent Prompt Specification
 
 Both kinds of prompts must include:
-- `preference_path`: `${CLAUDE_PLUGIN_DATA}/preference.md`, follow it as much as possible
-- `forbidden_path`: `${CLAUDE_PLUGIN_DATA}/forbidden.md`, follow it as much as possible
+- `preference_path`: `${CLAUDE_PLUGIN_DATA}/preference.md`, if present, it must be followed
+- `forbidden_path`: `${CLAUDE_PLUGIN_DATA}/forbidden.md`, if present, it must be followed
 
 When dispatching `schizophrenic`, only include the following 2 items additionally:
 - requirement: the user's original requirement or the AI's feedback e.g., new issues, sticking points, user replies, or a request to plan the next phase after a task has finished executing
