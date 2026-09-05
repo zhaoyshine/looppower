@@ -51,7 +51,7 @@ skill 刻意命名为 **dynamic-loop** 而非 looppower：插件是整体，skil
 
 ## 设计理念
 
-**模型分级。** 专家组默认使用最强的 AI 模型（opus），只承担一件事：High-Level 规划与重大决策。它不读代码、不执行任务。调研代码、跑 lint、机械执行这些 token 大头，都被拆成小任务派给更便宜的模型（haiku/sonnet）。模型选择遵循「重大决策使用 opus，简单的事情使用 haiku，sonnet 作为 haiku 的备用」，并通过减小 Task 复杂度来减少 opus 的使用。Claude Code 的 plan 模式由主模型边探索边规划，探索本身很贵；本工作流把最贵的模型完全挡在执行之外，只做决策，对大多数任务，同样的结果整体开销更低。
+**模型分级。** 专家组默认使用最强的 AI 模型（opus），只承担一件事：High-Level 规划与重大决策。它不读代码、不执行任务。调研代码、跑 lint、机械执行这些 token 大头，都被拆成小任务派给更便宜的模型（haiku/sonnet）。模型选择遵循「重大决策使用 opus，简单的事情使用 haiku，sonnet 作为 haiku 的备用」，并通过减小 task 复杂度来减少 opus 的使用。Claude Code 的 plan 模式由主模型边探索边规划，探索本身很贵；本工作流把最贵的模型完全挡在执行之外，只做决策，对大多数任务，同样的结果整体开销更低。
 
 **工具自动扩展。** 本项目的 skill 与 agent 位于插件根目录下的 `skills/`、`agents/` 目录，由 Claude Code 自动发现并触发。Claude 升级带来的新能力与新工具不需要改动本工作流；你自己下载安装的 skill 和 agent 也会被同样自动发现、纳入执行。
 
