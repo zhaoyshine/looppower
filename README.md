@@ -1,3 +1,5 @@
+不好用，别用，哈哈哈
+
 [中文](./README_zh.md)
 
 # looppower
